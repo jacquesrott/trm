@@ -1,3 +1,9 @@
+# trm
+
+.trm
+
+# Python
+
 *.pyc
 __pycache__
 *.egg-info
