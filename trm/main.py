@@ -2,7 +2,6 @@ import click
 import os
 import configparser
 
-from trm.sanitiser import sanitise
 from trm.parser import MarkdownParser
 
 
@@ -32,9 +31,7 @@ def trm(note, config, verbose):
     config = configparser.ConfigParser()
     config.read(paths)
 
-    lines = sanitise(note.readlines())
-
-    markdown = MarkdownParser(lines)
+    markdown = MarkdownParser(note.readlines())
     elements_tree = markdown.parse()
 
     if verbose:

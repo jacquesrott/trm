@@ -93,6 +93,7 @@ class ContentElement(LeafElement):
 
 
 class MarkdownParser(object):
+    whitespaces = re.compile(r'^(?P<indent> +|\t+)(.*)')
 
     element_classes = [
         TitleElement,
@@ -101,13 +102,37 @@ class MarkdownParser(object):
         ContentElement,
     ]
 
-    def __init__(self, lines):
+    def __init__(self, lines, tab_spaces=4):
         self.lines = lines
         self.tree = RootElement()
+        self.tab_spaces = tab_spaces
+
+    def get_sanitised_lines(self):
+        min_indent = None
+        for i, line in enumerate(self.lines):
+            match = self.whitespaces.match(line)
+            if match is None:
+                min_indent = None
+                yield line
+                continue
+            indent = match.group('indent')
+            if '\t' in indent:
+                sanitised = indent.replace('\t', ' ' * self.tab_spaces)
+            else:
+                sanitised = indent
+
+            if min_indent is None:
+                min_indent = sanitised
+
+            if len(sanitised) < len(min_indent):
+                raise IndentationError('Wrong indentation at line %s' % (i + 1))
+
+            sanitised = sanitised.replace(min_indent, '.' * len(min_indent), 1)
+            yield line.replace(indent, sanitised)
 
     def parse(self):
         leaf = self.tree
-        for line in self.lines:
+        for line in self.get_sanitised_lines():
             for element_cls in self.element_classes:
                 element = element_cls.match(line)
                 if element is None:
